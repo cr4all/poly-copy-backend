@@ -1,11 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { getPlugin } from 'polygon-bitquery-api';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const BitqueryAPI = getPlugin();
 
   const config = new DocumentBuilder()
     .setTitle('CTB Copy Trading API')
