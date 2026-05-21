@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { Wallet, JsonRpcProvider } from 'ethers';
 import { ClobClient, SignatureTypeV2 } from '@polymarket/clob-client-v2';
-import { V5SignerAdapter } from 'src/utils/web3-utils';
+import { V5SignerAdapter } from '../utils/web3-utils';
 
 const HOST = 'https://clob.polymarket.com';
 const CHAIN_ID = 137;
@@ -54,7 +54,8 @@ export async function createClobClient(
     chain: CHAIN_ID,
     signer,
     creds: apiCreds,
-    signatureType: options.signatureType ?? SignatureTypeV2.POLY_GNOSIS_SAFE,
+    // Magic Link / email login → proxy wallet (see Polymarket Signature Types)
+    signatureType: options.signatureType ?? SignatureTypeV2.POLY_PROXY,
     funderAddress,
     ...(builderCode ? { builderConfig: { builderCode } } : {}),
   });

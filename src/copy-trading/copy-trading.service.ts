@@ -6,6 +6,7 @@ import { PolymarketClient } from 'src/clients/polymarket.client';
 import { CopyTradingStrategy, NormalizedTrade } from './copy-trading.strategy';
 import { BotPosition } from './entities/bot-position.schema';
 import { LeaderTrade, TradeStatus } from './entities/leader-trade.schema';
+import { parsePolymarketPostOrderResponse } from './polymarket-order-response';
 
 @Injectable()
 export class CopyTradingService {
@@ -71,13 +72,20 @@ export class CopyTradingService {
 
       // 7️⃣ Execute (measure latency: leader trade time → execution done)
       const executedAt = new Date();
-      await this.executeTrade(
+      const execResult = await this.executeTrade(
         trade,
         decision.side!,
         decision.size!,
+        decision.price,
       );
 
-      // 8️⃣ Update bot position
+      if (!execResult.ok) {
+        await this.updateTradeStatus(trade.tradeId, TradeStatus.FAILED, execResult.reason);
+        this.logger.warn(`Copy trade ${trade.tradeId} failed: ${execResult.reason}`);
+        return;
+      }
+
+      // 8️⃣ Update bot position (only after confirmed order)
       await this.updateBotPosition(
         trade,
         decision.side!,
@@ -116,7 +124,8 @@ export class CopyTradingService {
       );
 
       if (tradeId) {
-        await this.updateTradeStatus(tradeId, TradeStatus.FAILED, err?.message);
+        const reason = err instanceof Error ? err.message : String(err);
+        await this.updateTradeStatus(tradeId, TradeStatus.FAILED, reason);
       }
     }
   }
@@ -237,30 +246,53 @@ export class CopyTradingService {
     trade: NormalizedTrade,
     side: 'BUY' | 'SELL',
     size: number,
-  ) {
-    const client = await this.polyClient.getClient();
-
+    orderPrice?: number,
+  ): Promise<{ ok: true; orderId: string } | { ok: false; reason: string }> {
     if (!trade.tokenID) {
-      throw new Error('Missing tokenID');
+      return { ok: false, reason: 'Missing tokenID' };
     }
 
-    const [tickSize, negRisk] = await Promise.all([
-      client.getTickSize(trade.tokenID),
-      client.getNegRisk(trade.tokenID),
-    ]);
+    try {
+      const client = await this.polyClient.getClient();
 
-    this.logger.log(
-      `Executing ${side} ${size} @ ${trade.price} (${trade.tokenID})`,
-    );
+      const [tickSize, negRisk] = await Promise.all([
+        client.getTickSize(trade.tokenID),
+        client.getNegRisk(trade.tokenID),
+      ]);
 
-    await client.createAndPostOrder(
-      {
-        tokenID: trade.tokenID,
-        side: side === 'BUY' ? Side.BUY : Side.SELL,
-        price: trade.price,
-        size,
-      },
-      { tickSize, negRisk },
-    );
+      const price = orderPrice ?? trade.price;
+
+      this.logger.log(
+        `Executing ${side} ${size} @ ${price} (${trade.tokenID})`,
+      );
+
+      const response = await client.createAndPostOrder(
+        {
+          tokenID: trade.tokenID,
+          side: side === 'BUY' ? Side.BUY : Side.SELL,
+          price,
+          size,
+        },
+        { tickSize, negRisk },
+      );
+
+      const result = parsePolymarketPostOrderResponse(response);
+      if (!result.ok) {
+        this.logger.warn(
+          `Order rejected for ${trade.tradeId}: ${result.reason} (${JSON.stringify(response)})`,
+        );
+        return result;
+      }
+
+      const statusSuffix = result.status ? `, status=${result.status}` : '';
+      this.logger.log(
+        `Order placed ${result.orderId}${statusSuffix}: ${side} ${size} @ ${price}`,
+      );
+      return { ok: true, orderId: result.orderId };
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Order failed for ${trade.tradeId}: ${reason}`);
+      return { ok: false, reason };
+    }
   }
 }
