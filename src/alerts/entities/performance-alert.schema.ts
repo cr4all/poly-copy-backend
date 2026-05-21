@@ -17,7 +17,10 @@ export enum AlertSeverity {
 
 export type PerformanceAlertDocument = PerformanceAlert & Document;
 
-@Schema({ timestamps: { createdAt: true, updatedAt: false }, collection: 'performance_alerts' })
+@Schema({
+  timestamps: { createdAt: true, updatedAt: false },
+  collection: 'performance_alerts',
+})
 export class PerformanceAlert {
   @ApiProperty({ description: 'Alert UUID' })
   _id?: string;
@@ -27,7 +30,11 @@ export class PerformanceAlert {
   type: AlertType;
 
   @ApiProperty({ enum: AlertSeverity })
-  @Prop({ required: true, enum: Object.values(AlertSeverity), default: AlertSeverity.WARNING })
+  @Prop({
+    required: true,
+    enum: Object.values(AlertSeverity),
+    default: AlertSeverity.WARNING,
+  })
   severity: AlertSeverity;
 
   @ApiProperty()
@@ -47,7 +54,8 @@ export class PerformanceAlert {
   createdAt?: Date;
 }
 
-export const PerformanceAlertSchema = SchemaFactory.createForClass(PerformanceAlert);
+export const PerformanceAlertSchema =
+  SchemaFactory.createForClass(PerformanceAlert);
 PerformanceAlertSchema.index({ createdAt: 1 });
 
 PerformanceAlertSchema.set('toJSON', {

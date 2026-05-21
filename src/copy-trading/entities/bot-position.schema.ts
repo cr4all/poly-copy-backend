@@ -3,7 +3,10 @@ import { Document } from 'mongoose';
 
 export type BotPositionDocument = BotPosition & Document;
 
-@Schema({ timestamps: { createdAt: false, updatedAt: true }, collection: 'bot_positions' })
+@Schema({
+  timestamps: { createdAt: false, updatedAt: true },
+  collection: 'bot_positions',
+})
 export class BotPosition {
   _id?: string;
 

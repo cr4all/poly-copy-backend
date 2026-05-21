@@ -1,11 +1,14 @@
-import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
-import { Interval } from "@nestjs/schedule";
-import { mkdir, writeFile } from "fs/promises";
-import { join } from "path";
-import { CopyTradingService } from "src/copy-trading/copy-trading.service";
-import { FollowedWallet } from "src/followed-wallets/entity/followed-wallet.schema";
-import { FollowedWalletsService } from "src/followed-wallets/followed-wallets.service";
-import { PolymarketService, PolymarketActivityItem } from "./polymarket.service";
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Interval } from '@nestjs/schedule';
+import { mkdir, writeFile } from 'fs/promises';
+import { join } from 'path';
+import { CopyTradingService } from 'src/copy-trading/copy-trading.service';
+import { FollowedWallet } from 'src/followed-wallets/entity/followed-wallet.schema';
+import { FollowedWalletsService } from 'src/followed-wallets/followed-wallets.service';
+import {
+  PolymarketService,
+  PolymarketActivityItem,
+} from './polymarket.service';
 
 @Injectable()
 export class PolymarketPoller implements OnModuleInit {
@@ -15,7 +18,7 @@ export class PolymarketPoller implements OnModuleInit {
     private readonly copyService: CopyTradingService,
     private readonly followedWallets: FollowedWalletsService,
     private readonly polymarketService: PolymarketService,
-  ) { }
+  ) {}
 
   /** Unique id for a TRADE activity (for cursor / idempotency) */
   private activityTradeId(a: PolymarketActivityItem): string {
@@ -23,7 +26,10 @@ export class PolymarketPoller implements OnModuleInit {
   }
 
   /** Map Data API TRADE activity to shape CopyTradingService expects; fetchedAt = when we got this trade from API */
-  private activityToRawTrade(a: PolymarketActivityItem, fetchedAt: Date): Record<string, unknown> {
+  private activityToRawTrade(
+    a: PolymarketActivityItem,
+    fetchedAt: Date,
+  ): Record<string, unknown> {
     return {
       id: this.activityTradeId(a),
       marketId: a.conditionId,
@@ -46,18 +52,21 @@ export class PolymarketPoller implements OnModuleInit {
     const wallets = await this.followedWallets.findActive();
     if (wallets.length === 0) return;
 
-    const usersDir = join(process.cwd(), "users");
+    const usersDir = join(process.cwd(), 'users');
 
     for (const wallet of wallets) {
       const username = (wallet.label ?? wallet.wallet)
-        .replace(/^@/, "")
-        .replace(/[^a-zA-Z0-9_-]/g, "_");
+        .replace(/^@/, '')
+        .replace(/[^a-zA-Z0-9_-]/g, '_');
       const userDir = join(usersDir, username);
 
       try {
-        const activity = await this.polymarketService.getActivity(wallet.wallet, 20);
+        const activity = await this.polymarketService.getActivity(
+          wallet.wallet,
+          20,
+        );
         await mkdir(userDir, { recursive: true });
-        const logPath = join(userDir, "last_20_trades.log");
+        const logPath = join(userDir, 'last_20_trades.log');
         const content = JSON.stringify(
           {
             username: wallet.label ?? `@${username}`,
@@ -68,19 +77,26 @@ export class PolymarketPoller implements OnModuleInit {
           null,
           2,
         );
-        await writeFile(logPath, content, "utf-8");
-        this.logger.log(`Wrote latest ${activity.length} activities (Data API) to ${logPath}`);
+        await writeFile(logPath, content, 'utf-8');
+        this.logger.log(
+          `Wrote latest ${activity.length} activities (Data API) to ${logPath}`,
+        );
       } catch (err) {
-        this.logger.warn(`Failed to log activity for ${username}: ${err instanceof Error ? err.message : err}`);
+        this.logger.warn(
+          `Failed to log activity for ${username}: ${err instanceof Error ? err.message : err}`,
+        );
       }
     }
   }
 
-  async initializeCursor(wallet: FollowedWallet, tradeActivities: PolymarketActivityItem[]) {
+  async initializeCursor(
+    wallet: FollowedWallet,
+    tradeActivities: PolymarketActivityItem[],
+  ) {
     const hasCursor =
       wallet.lastTradeId != null &&
-      wallet.lastTradeId !== "" &&
-      String(wallet.lastTradeId).toLowerCase() !== "null";
+      wallet.lastTradeId !== '' &&
+      String(wallet.lastTradeId).toLowerCase() !== 'null';
     if (hasCursor) return;
 
     if (!tradeActivities?.length) return;
@@ -105,22 +121,29 @@ export class PolymarketPoller implements OnModuleInit {
       const walletId = wallet._id?.toString();
       if (!walletId) continue;
       const makerAddress = wallet.wallet;
-      const label = wallet.label ?? wallet.wallet.slice(0, 10) + "…";
+      const label = wallet.label ?? wallet.wallet.slice(0, 10) + '…';
 
-      const activity = await this.polymarketService.getActivity(makerAddress, 100);
+      const activity = await this.polymarketService.getActivity(
+        makerAddress,
+        100,
+      );
       const fetchedAt = new Date();
       const tradesOnly = activity.filter(
         (a): a is PolymarketActivityItem =>
-          a.type === "TRADE" && typeof a.asset === "string" && a.asset.length > 0,
+          a.type === 'TRADE' &&
+          typeof a.asset === 'string' &&
+          a.asset.length > 0,
       );
 
       const hasCursor =
         wallet.lastTradeId != null &&
-        wallet.lastTradeId !== "" &&
-        String(wallet.lastTradeId).toLowerCase() !== "null";
+        wallet.lastTradeId !== '' &&
+        String(wallet.lastTradeId).toLowerCase() !== 'null';
       if (!hasCursor) {
         await this.initializeCursor(wallet, tradesOnly);
-        this.logger.log(`  [${label}] cursor initialized (${tradesOnly.length} TRADE(s) seen)`);
+        this.logger.log(
+          `  [${label}] cursor initialized (${tradesOnly.length} TRADE(s) seen)`,
+        );
         continue;
       }
 
@@ -133,7 +156,10 @@ export class PolymarketPoller implements OnModuleInit {
       }
 
       for (const a of newTrades.reverse()) {
-        await this.copyService.handleTrade(makerAddress, this.activityToRawTrade(a, fetchedAt));
+        await this.copyService.handleTrade(
+          makerAddress,
+          this.activityToRawTrade(a, fetchedAt),
+        );
       }
 
       if (newTrades.length > 0) {
@@ -141,9 +167,10 @@ export class PolymarketPoller implements OnModuleInit {
         await this.followedWallets.update(walletId, {
           lastTradeId: newCursorId,
         });
-        this.logger.log(`  [${label}] ${newTrades.length} new TRADE(s) processed, cursor updated`);
+        this.logger.log(
+          `  [${label}] ${newTrades.length} new TRADE(s) processed, cursor updated`,
+        );
       }
     }
   }
-
 }

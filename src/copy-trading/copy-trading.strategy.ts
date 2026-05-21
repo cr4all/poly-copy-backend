@@ -79,8 +79,8 @@ export function computeOrderSizeFromStake(
 export class CopyTradingStrategy {
   // ---- CONFIG ----
   private readonly MIN_EXECUTABLE_SIZE = 1; // Polymarket minimum (tokens)
-  private readonly MIN_SIGNAL_SIZE = 5;     // ignore micro rebalances
-  private readonly COPY_STAKE_USD = 3;    // fixed USD per copy trade
+  private readonly MIN_SIGNAL_SIZE = 5; // ignore micro rebalances
+  private readonly COPY_STAKE_USD = 3; // fixed USD per copy trade
   private readonly MIN_ORDER_SIZE_USD = 1;
   /** Do not copy if leader trade is at least this old when we decide */
   private readonly MAX_LEADER_TRADE_AGE_MS = 60_000;
@@ -105,8 +105,7 @@ export class CopyTradingStrategy {
       };
     }
 
-    const side: 'BUY' | 'SELL' =
-      leaderNetChange > 0 ? 'BUY' : 'SELL';
+    const side: 'BUY' | 'SELL' = leaderNetChange > 0 ? 'BUY' : 'SELL';
 
     // Already aligned
     if (

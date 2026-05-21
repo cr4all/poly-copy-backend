@@ -39,8 +39,7 @@ export class CopyTradingService {
       const trade = this.normalizeTrade(rawTrade);
 
       // 3️⃣ Leader delta
-      const leaderNetChange =
-        trade.side === 'BUY' ? trade.size : -trade.size;
+      const leaderNetChange = trade.side === 'BUY' ? trade.size : -trade.size;
 
       // 4️⃣ Bot position
       const botCurrentPosition = await this.getBotPosition(
@@ -64,9 +63,7 @@ export class CopyTradingService {
       });
 
       if (!decision.shouldTrade) {
-        this.logger.debug(
-          `Skip trade ${trade.tradeId}: ${decision.reason}`,
-        );
+        this.logger.debug(`Skip trade ${trade.tradeId}: ${decision.reason}`);
         return;
       }
 
@@ -80,17 +77,19 @@ export class CopyTradingService {
       );
 
       if (!execResult.ok) {
-        await this.updateTradeStatus(trade.tradeId, TradeStatus.FAILED, execResult.reason);
-        this.logger.warn(`Copy trade ${trade.tradeId} failed: ${execResult.reason}`);
+        await this.updateTradeStatus(
+          trade.tradeId,
+          TradeStatus.FAILED,
+          execResult.reason,
+        );
+        this.logger.warn(
+          `Copy trade ${trade.tradeId} failed: ${execResult.reason}`,
+        );
         return;
       }
 
       // 8️⃣ Update bot position (only after confirmed order)
-      await this.updateBotPosition(
-        trade,
-        decision.side!,
-        decision.size!,
-      );
+      await this.updateBotPosition(trade, decision.side!, decision.size!);
 
       // 9️⃣ Mark copied and persist latency breakdown
       const leaderTradeAt = this.toLeaderTradeAt(trade.leaderTradeTimestamp);
@@ -102,21 +101,26 @@ export class CopyTradingService {
         leaderTradeAt && fetchedAt
           ? Math.round(fetchedAt.getTime() - leaderTradeAt.getTime())
           : null;
-      const executionLatencyMs =
-        fetchedAt ? Math.round(executedAt.getTime() - fetchedAt.getTime()) : null;
-      await this.updateTradeStatus(trade.tradeId, TradeStatus.COPIED, undefined, {
-        copiedAt: executedAt,
-        latencyMs: latencyMs ?? undefined,
-        fetchLatencyMs: fetchLatencyMs ?? undefined,
-        executionLatencyMs: executionLatencyMs ?? undefined,
-        executedSize: decision.size!.toString(),
-      });
+      const executionLatencyMs = fetchedAt
+        ? Math.round(executedAt.getTime() - fetchedAt.getTime())
+        : null;
+      await this.updateTradeStatus(
+        trade.tradeId,
+        TradeStatus.COPIED,
+        undefined,
+        {
+          copiedAt: executedAt,
+          latencyMs: latencyMs ?? undefined,
+          fetchLatencyMs: fetchLatencyMs ?? undefined,
+          executionLatencyMs: executionLatencyMs ?? undefined,
+          executedSize: decision.size!.toString(),
+        },
+      );
       if (latencyMs != null) {
         this.logger.log(
           `Copy trade ${trade.tradeId} latency: ${latencyMs} ms (fetch: ${fetchLatencyMs ?? '—'} ms, execution: ${executionLatencyMs ?? '—'} ms)`,
         );
       }
-
     } catch (err) {
       this.logger.error(
         `Failed handling trade ${tradeId} from ${sourceWallet}`,
@@ -172,7 +176,11 @@ export class CopyTradingService {
       });
     } catch (err: unknown) {
       // MongoDB duplicate key (unique index on tradeId)
-      if (typeof err === 'object' && err !== null && (err as { code?: number }).code === 11000) {
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        (err as { code?: number }).code === 11000
+      ) {
         return;
       }
       throw err;
@@ -191,11 +199,19 @@ export class CopyTradingService {
       executedSize?: string;
     },
   ): Promise<void> {
-    await this.tradeModel.updateOne({ tradeId }, { $set: { status, reason, ...extra } }).exec();
+    await this.tradeModel
+      .updateOne({ tradeId }, { $set: { status, reason, ...extra } })
+      .exec();
   }
 
-  private async getBotPosition(marketId: string, tokenId: string): Promise<number> {
-    const botPos = await this.botPositionModel.findOne({ marketId, tokenId }).lean().exec();
+  private async getBotPosition(
+    marketId: string,
+    tokenId: string,
+  ): Promise<number> {
+    const botPos = await this.botPositionModel
+      .findOne({ marketId, tokenId })
+      .lean()
+      .exec();
     return botPos ? Number(botPos.netSize) : 0;
   }
 
@@ -204,10 +220,12 @@ export class CopyTradingService {
     side: 'BUY' | 'SELL',
     size: number,
   ): Promise<void> {
-    let botPos = await this.botPositionModel.findOne({
-      marketId: trade.marketId,
-      tokenId: trade.tokenID,
-    }).exec();
+    let botPos = await this.botPositionModel
+      .findOne({
+        marketId: trade.marketId,
+        tokenId: trade.tokenID,
+      })
+      .exec();
 
     if (!botPos) {
       botPos = await this.botPositionModel.create({
@@ -234,8 +252,12 @@ export class CopyTradingService {
       side: raw.side,
       size: Number(raw.size),
       price: Number(raw.price),
-      leaderTradeTimestamp: raw.leaderTradeTimestamp != null ? Number(raw.leaderTradeTimestamp) : undefined,
-      fetchedAt: raw.fetchedAt != null ? new Date(Number(raw.fetchedAt)) : undefined,
+      leaderTradeTimestamp:
+        raw.leaderTradeTimestamp != null
+          ? Number(raw.leaderTradeTimestamp)
+          : undefined,
+      fetchedAt:
+        raw.fetchedAt != null ? new Date(Number(raw.fetchedAt)) : undefined,
     };
   }
 

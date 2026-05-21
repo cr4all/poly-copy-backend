@@ -9,10 +9,16 @@ class WeeklyReportByWalletDto {
 }
 
 export class WeeklyReportDto {
-  @ApiProperty({ description: 'Week start date (YYYY-MM-DD)', example: '2025-01-27' })
+  @ApiProperty({
+    description: 'Week start date (YYYY-MM-DD)',
+    example: '2025-01-27',
+  })
   weekStart: string;
 
-  @ApiProperty({ description: 'Week end date (YYYY-MM-DD)', example: '2025-02-02' })
+  @ApiProperty({
+    description: 'Week end date (YYYY-MM-DD)',
+    example: '2025-02-02',
+  })
   weekEnd: string;
 
   @ApiProperty({ description: 'Trades copied in the week', example: 15 })
@@ -27,9 +33,15 @@ export class WeeklyReportDto {
   @ApiProperty({ description: 'Total trades in the week', example: 19 })
   totalTrades: number;
 
-  @ApiProperty({ description: 'Copy rate percentage for the week', example: 78.95 })
+  @ApiProperty({
+    description: 'Copy rate percentage for the week',
+    example: 78.95,
+  })
   copyRatePercent: number;
 
-  @ApiProperty({ type: [WeeklyReportByWalletDto], description: 'Breakdown by leader wallet' })
+  @ApiProperty({
+    type: [WeeklyReportByWalletDto],
+    description: 'Breakdown by leader wallet',
+  })
   byWallet: WeeklyReportByWalletDto[];
 }

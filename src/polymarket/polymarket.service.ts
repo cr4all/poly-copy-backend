@@ -57,8 +57,7 @@ export class PolymarketService {
       throw new InternalServerErrorException('Failed to parse __NEXT_DATA__');
     }
 
-    const queries =
-      nextData?.props?.pageProps?.dehydratedState?.queries;
+    const queries = nextData?.props?.pageProps?.dehydratedState?.queries;
 
     if (!Array.isArray(queries)) return null;
 
@@ -76,11 +75,17 @@ export class PolymarketService {
    * Fetch user activity from Polymarket Data API (same as "most recent activities").
    * Use this for activity feed; CLOB getTrades is a different dataset (order-book matches only).
    */
-  async getActivity(proxyWallet: string, limit = 20): Promise<PolymarketActivityItem[]> {
-    const { data } = await axios.get<PolymarketActivityItem[]>(DATA_API_ACTIVITY, {
-      params: { user: proxyWallet, limit },
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CTB/1.0)' },
-    });
+  async getActivity(
+    proxyWallet: string,
+    limit = 20,
+  ): Promise<PolymarketActivityItem[]> {
+    const { data } = await axios.get<PolymarketActivityItem[]>(
+      DATA_API_ACTIVITY,
+      {
+        params: { user: proxyWallet, limit },
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CTB/1.0)' },
+      },
+    );
     return Array.isArray(data) ? data : [];
   }
 }

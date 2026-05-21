@@ -10,7 +10,10 @@ export enum TradeStatus {
 
 export type LeaderTradeDocument = LeaderTrade & Document;
 
-@Schema({ timestamps: { createdAt: true, updatedAt: false }, collection: 'leader_trades' })
+@Schema({
+  timestamps: { createdAt: true, updatedAt: false },
+  collection: 'leader_trades',
+})
 export class LeaderTrade {
   _id?: string;
 
@@ -38,7 +41,11 @@ export class LeaderTrade {
   @Prop({ required: true })
   price: string;
 
-  @Prop({ required: true, enum: Object.values(TradeStatus), default: TradeStatus.PENDING })
+  @Prop({
+    required: true,
+    enum: Object.values(TradeStatus),
+    default: TradeStatus.PENDING,
+  })
   status: TradeStatus;
 
   @Prop({ type: String, default: null })

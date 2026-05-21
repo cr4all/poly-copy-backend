@@ -1,7 +1,10 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { BotPosition, BotPositionSchema } from './entities/bot-position.schema';
-import { FollowedWallet, FollowedWalletSchema } from 'src/followed-wallets/entity/followed-wallet.schema';
+import {
+  FollowedWallet,
+  FollowedWalletSchema,
+} from 'src/followed-wallets/entity/followed-wallet.schema';
 import { CopyTradingService } from './copy-trading.service';
 import { PolymarketModule } from 'src/polymarket/polymarket.module';
 import { CopyTradingStrategy } from './copy-trading.strategy';
@@ -17,11 +20,7 @@ import { LeaderTrade, LeaderTradeSchema } from './entities/leader-trade.schema';
       { name: LeaderTrade.name, schema: LeaderTradeSchema },
     ]),
   ],
-  providers: [
-    CopyTradingService, CopyTradingStrategy, PolymarketClient
-  ],
-  exports: [
-    CopyTradingService,
-  ],
+  providers: [CopyTradingService, CopyTradingStrategy, PolymarketClient],
+  exports: [CopyTradingService],
 })
 export class CopyTradingModule {}

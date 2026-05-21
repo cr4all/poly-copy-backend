@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { FollowedWallet } from './entity/followed-wallet.schema';
@@ -15,7 +19,10 @@ export class FollowedWalletsService {
   }
 
   async findActive(): Promise<FollowedWallet[]> {
-    return this.followedWalletModel.find({ isActive: true }).sort({ createdAt: -1 }).exec();
+    return this.followedWalletModel
+      .find({ isActive: true })
+      .sort({ createdAt: -1 })
+      .exec();
   }
 
   async add(wallet: string, label?: string): Promise<FollowedWallet> {
@@ -24,7 +31,9 @@ export class FollowedWalletsService {
       throw new ConflictException('Wallet address is required');
     }
 
-    const existing = await this.followedWalletModel.findOne({ wallet: normalized }).exec();
+    const existing = await this.followedWalletModel
+      .findOne({ wallet: normalized })
+      .exec();
     if (existing) {
       return existing;
     }
@@ -56,7 +65,10 @@ export class FollowedWalletsService {
       wallet.isActive = data.isActive;
     }
     if (data.lastTradeId !== undefined) {
-      wallet.lastTradeId = data.lastTradeId === null || data.lastTradeId === '' ? null : data.lastTradeId;
+      wallet.lastTradeId =
+        data.lastTradeId === null || data.lastTradeId === ''
+          ? null
+          : data.lastTradeId;
     }
 
     await wallet.save();

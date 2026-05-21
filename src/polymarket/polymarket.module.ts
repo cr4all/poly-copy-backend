@@ -6,18 +6,8 @@ import { CopyTradingModule } from '../copy-trading/copy-trading.module';
 import { FollowedWalletsModule } from 'src/followed-wallets/followed-wallets.module';
 
 @Module({
-  imports: [
-    forwardRef(() => CopyTradingModule),
-    FollowedWalletsModule
-  ],
-  providers: [
-    PolymarketClient,
-    PolymarketService,
-    PolymarketPoller,
-  ],
-  exports: [
-    PolymarketClient,
-    PolymarketService,
-  ],
+  imports: [forwardRef(() => CopyTradingModule), FollowedWalletsModule],
+  providers: [PolymarketClient, PolymarketService, PolymarketPoller],
+  exports: [PolymarketClient, PolymarketService],
 })
 export class PolymarketModule {}

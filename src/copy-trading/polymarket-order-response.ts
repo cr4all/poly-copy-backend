@@ -37,8 +37,10 @@ function isOrderResponse(value: unknown): value is PolymarketOrderResponse {
 function getClobApiErrorMessage(response: unknown): string | null {
   if (response == null || typeof response !== 'object') return null;
   const body = response as { error?: unknown; errorMsg?: unknown };
-  if (typeof body.error === 'string' && body.error.length > 0) return body.error;
-  if (typeof body.errorMsg === 'string' && body.errorMsg.length > 0) return body.errorMsg;
+  if (typeof body.error === 'string' && body.error.length > 0)
+    return body.error;
+  if (typeof body.errorMsg === 'string' && body.errorMsg.length > 0)
+    return body.errorMsg;
   return null;
 }
 

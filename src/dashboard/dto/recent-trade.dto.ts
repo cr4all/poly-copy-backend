@@ -28,13 +28,20 @@ export class RecentTradeDto {
   @ApiProperty({ description: 'Leader trade size (decimal string)' })
   size: string;
 
-  @ApiProperty({ description: 'Size we actually executed (for COPIED trades); use this for "my" size', required: false })
+  @ApiProperty({
+    description:
+      'Size we actually executed (for COPIED trades); use this for "my" size',
+    required: false,
+  })
   executedSize?: string | null;
 
   @ApiProperty({ description: 'Price (decimal string)' })
   price: string;
 
-  @ApiProperty({ description: 'Status', enum: ['PENDING', 'COPIED', 'SKIPPED', 'FAILED'] })
+  @ApiProperty({
+    description: 'Status',
+    enum: ['PENDING', 'COPIED', 'SKIPPED', 'FAILED'],
+  })
   status: string;
 
   @ApiProperty({ description: 'Skip/fail reason', required: false })
@@ -43,12 +50,22 @@ export class RecentTradeDto {
   @ApiProperty({ description: 'Created at (ISO 8601)' })
   createdAt: string;
 
-  @ApiProperty({ description: 'Total latency in ms (leader trade → our execution); only for COPIED', required: false })
+  @ApiProperty({
+    description:
+      'Total latency in ms (leader trade → our execution); only for COPIED',
+    required: false,
+  })
   latencyMs?: number | null;
 
-  @ApiProperty({ description: 'Fetch latency: leader trade → we saw it (ms)', required: false })
+  @ApiProperty({
+    description: 'Fetch latency: leader trade → we saw it (ms)',
+    required: false,
+  })
   fetchLatencyMs?: number | null;
 
-  @ApiProperty({ description: 'Execution latency: we saw it → order sent (ms)', required: false })
+  @ApiProperty({
+    description: 'Execution latency: we saw it → order sent (ms)',
+    required: false,
+  })
   executionLatencyMs?: number | null;
 }

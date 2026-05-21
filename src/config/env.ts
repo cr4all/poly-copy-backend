@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 dotenv.config();
 
 function requireEnv(key: string): string {
@@ -10,8 +10,8 @@ function requireEnv(key: string): string {
 }
 
 export const env = {
-  nodeEnv: requireEnv("NODE_ENV"),
-  polymarketApiBase: requireEnv("POLYMARKET_API_BASE"),
+  nodeEnv: requireEnv('NODE_ENV'),
+  polymarketApiBase: requireEnv('POLYMARKET_API_BASE'),
   defaultLimit: Number(process.env.DEFAULT_LIMIT ?? 25),
   requestTimeoutMs: Number(process.env.REQUEST_TIMEOUT_MS ?? 5000),
 };

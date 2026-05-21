@@ -24,6 +24,9 @@ export class TradeActivityItemDto {
 }
 
 export class TradeActivityResponseDto {
-  @ApiProperty({ type: [TradeActivityItemDto], description: 'Trades for the given wallet address' })
+  @ApiProperty({
+    type: [TradeActivityItemDto],
+    description: 'Trades for the given wallet address',
+  })
   trades: TradeActivityItemDto[];
 }

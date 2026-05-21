@@ -6,11 +6,17 @@ import { V5SignerAdapter } from '../utils/web3-utils';
 const HOST = 'https://clob.polymarket.com';
 const CHAIN_ID = 137;
 
-function getApiCreds(): { key: string; secret: string; passphrase: string } | undefined {
+function getApiCreds():
+  | { key: string; secret: string; passphrase: string }
+  | undefined {
   const raw = process.env.POLYMARKET_API_CREDS;
   if (!raw) return undefined;
   try {
-    return JSON.parse(raw) as { key: string; secret: string; passphrase: string };
+    return JSON.parse(raw) as {
+      key: string;
+      secret: string;
+      passphrase: string;
+    };
   } catch {
     throw new Error('POLYMARKET_API_CREDS must be valid JSON');
   }
@@ -28,7 +34,8 @@ export interface CreateClobClientOptions {
 export async function createClobClient(
   options: CreateClobClientOptions = {},
 ): Promise<ClobClient> {
-  const rpcUrl = options.rpcUrl ?? process.env.RPC_URL ?? 'https://poly.api.pocket.network';
+  const rpcUrl =
+    options.rpcUrl ?? process.env.RPC_URL ?? 'https://poly.api.pocket.network';
   const privateKey = options.privateKey ?? process.env.PRIVATE_KEY;
   const funderAddress = options.funderAddress ?? process.env.FUNDER_ADDRESS;
   const requireApiCreds = options.requireApiCreds ?? true;

@@ -1,14 +1,11 @@
-import axios from "axios";
+import axios from 'axios';
 
 export const slugmarketClient = axios.create({
-    baseURL: "https://gamma-api.polymarket.com"
+  baseURL: 'https://gamma-api.polymarket.com',
 });
 
-
-
 export async function getMarketBySlug(slug: string) {
+  const res = await slugmarketClient.get(`/events/slug/${slug}`);
 
-    const res = await slugmarketClient.get(`/events/slug/${slug}`)
-
-    return res.data;
+  return res.data;
 }

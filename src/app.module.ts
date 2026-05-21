@@ -19,7 +19,9 @@ import { MongooseModule } from '@nestjs/mongoose';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    MongooseModule.forRoot(process.env.MONGODB_URI ?? 'mongodb://localhost:27017/polymarket_bot'),
+    MongooseModule.forRoot(
+      process.env.MONGODB_URI ?? 'mongodb://localhost:27017/polymarket_bot',
+    ),
     ScheduleModule.forRoot(),
     CopyTradingModule,
     FollowedWalletsModule,
@@ -27,14 +29,7 @@ import { MongooseModule } from '@nestjs/mongoose';
     AlertsModule,
   ],
   controllers: [PolymarketController],
-  providers: [
-    PolymarketClient,
-    PolymarketService,
-    PolymarketPoller,
-  ],
-  exports: [
-    PolymarketClient,
-    PolymarketService,
-  ],
+  providers: [PolymarketClient, PolymarketService, PolymarketPoller],
+  exports: [PolymarketClient, PolymarketService],
 })
-export class AppModule { }
+export class AppModule {}

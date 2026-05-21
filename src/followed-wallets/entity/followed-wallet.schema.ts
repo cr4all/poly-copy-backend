@@ -16,11 +16,16 @@ export class FollowedWallet {
   @Prop({ required: true, unique: true })
   wallet: string;
 
-  @ApiProperty({ description: 'Optional label (e.g. @Leader1)', required: false })
+  @ApiProperty({
+    description: 'Optional label (e.g. @Leader1)',
+    required: false,
+  })
   @Prop({ type: String, default: null })
   label?: string | null;
 
-  @ApiProperty({ description: 'Whether copy trading is active for this follower' })
+  @ApiProperty({
+    description: 'Whether copy trading is active for this follower',
+  })
   @Prop({ default: true })
   isActive: boolean;
 
@@ -38,7 +43,8 @@ export class FollowedWallet {
   updatedAt?: Date;
 }
 
-export const FollowedWalletSchema = SchemaFactory.createForClass(FollowedWallet);
+export const FollowedWalletSchema =
+  SchemaFactory.createForClass(FollowedWallet);
 
 FollowedWalletSchema.virtual('id').get(function () {
   return (this as { _id?: { toString(): string } })._id?.toString();

@@ -13,15 +13,21 @@ class LeaderComparisonDto {
   @ApiProperty() copied: number;
   @ApiProperty() skipped: number;
   @ApiProperty() failed: number;
-  @ApiProperty({ description: 'Total signals from this leader' }) totalSignals: number;
-  @ApiProperty({ description: 'Copy rate % for this leader' }) copyRatePercent: number;
-  @ApiProperty({ description: 'Fail rate % for this leader' }) failRatePercent: number;
+  @ApiProperty({ description: 'Total signals from this leader' })
+  totalSignals: number;
+  @ApiProperty({ description: 'Copy rate % for this leader' })
+  copyRatePercent: number;
+  @ApiProperty({ description: 'Fail rate % for this leader' })
+  failRatePercent: number;
 }
 
 export class ComparativeAnalysisDto {
   @ApiProperty({ type: BotSummaryDto, description: 'Bot aggregate stats' })
   bot: BotSummaryDto;
 
-  @ApiProperty({ type: [LeaderComparisonDto], description: 'Per-leader comparison' })
+  @ApiProperty({
+    type: [LeaderComparisonDto],
+    description: 'Per-leader comparison',
+  })
   leaders: LeaderComparisonDto[];
 }

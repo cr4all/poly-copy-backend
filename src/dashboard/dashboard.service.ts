@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { subDays } from 'date-fns';
-import { LeaderTrade, TradeStatus } from '../copy-trading/entities/leader-trade.schema';
+import {
+  LeaderTrade,
+  TradeStatus,
+} from '../copy-trading/entities/leader-trade.schema';
 import { BotPosition } from '../copy-trading/entities/bot-position.schema';
 import { FollowedWallet } from '../followed-wallets/entity/followed-wallet.schema';
 import { startOfWeek, subWeeks, format } from 'date-fns';
@@ -55,7 +58,13 @@ export interface WeeklyReportDto {
   tradesFailed: number;
   totalTrades: number;
   copyRatePercent: number;
-  byWallet: { wallet: string; label?: string; copied: number; skipped: number; failed: number }[];
+  byWallet: {
+    wallet: string;
+    label?: string;
+    copied: number;
+    skipped: number;
+    failed: number;
+  }[];
 }
 
 export interface LeaderComparisonDto {
@@ -70,7 +79,12 @@ export interface LeaderComparisonDto {
 }
 
 export interface ComparativeAnalysisDto {
-  bot: { totalCopied: number; totalSkipped: number; totalFailed: number; copyRatePercent: number };
+  bot: {
+    totalCopied: number;
+    totalSkipped: number;
+    totalFailed: number;
+    copyRatePercent: number;
+  };
   leaders: LeaderComparisonDto[];
 }
 
@@ -102,10 +116,12 @@ export class DashboardService {
       this.walletModel.countDocuments({ isActive: true }).exec(),
       this.positionModel.countDocuments().exec(),
       this.tradeModel.countDocuments({ status: TradeStatus.COPIED }).exec(),
-      this.tradeModel.countDocuments({
-        status: TradeStatus.COPIED,
-        createdAt: { $gte: since7DaysAgo },
-      }).exec(),
+      this.tradeModel
+        .countDocuments({
+          status: TradeStatus.COPIED,
+          createdAt: { $gte: since7DaysAgo },
+        })
+        .exec(),
       this.tradeModel.countDocuments({ status: TradeStatus.SKIPPED }).exec(),
       this.tradeModel.countDocuments({ status: TradeStatus.FAILED }).exec(),
       this.tradeModel.countDocuments({ status: TradeStatus.PENDING }).exec(),
@@ -168,7 +184,11 @@ export class DashboardService {
         .lean()
         .exec(),
     ]);
-    type Row = { latencyMs?: number | null; fetchLatencyMs?: number | null; executionLatencyMs?: number | null };
+    type Row = {
+      latencyMs?: number | null;
+      fetchLatencyMs?: number | null;
+      executionLatencyMs?: number | null;
+    };
     const rows = (allWithLatency ?? []) as Row[];
     const withLatency = rows.filter((t) => t.latencyMs != null);
     const withFetch = rows.filter((t) => t.fetchLatencyMs != null);
@@ -187,8 +207,10 @@ export class DashboardService {
         avgExecutionLatencyMs:
           recentWithExec.length > 0
             ? Math.round(
-                recentWithExec.reduce((s, t) => s + (t.executionLatencyMs ?? 0), 0) /
-                  recentWithExec.length,
+                recentWithExec.reduce(
+                  (s, t) => s + (t.executionLatencyMs ?? 0),
+                  0,
+                ) / recentWithExec.length,
               )
             : null,
       };
@@ -196,33 +218,46 @@ export class DashboardService {
     return {
       lastCopyLatencyMs: last?.latencyMs ?? null,
       avgCopyLatencyMs: Math.round(
-        withLatency.reduce((s, t) => s + (t.latencyMs ?? 0), 0) / withLatency.length,
+        withLatency.reduce((s, t) => s + (t.latencyMs ?? 0), 0) /
+          withLatency.length,
       ),
       lastFetchLatencyMs: last?.fetchLatencyMs ?? null,
       lastExecutionLatencyMs: last?.executionLatencyMs ?? null,
       avgFetchLatencyMs:
         withFetch.length > 0
           ? Math.round(
-              withFetch.reduce((s, t) => s + (t.fetchLatencyMs ?? 0), 0) / withFetch.length,
+              withFetch.reduce((s, t) => s + (t.fetchLatencyMs ?? 0), 0) /
+                withFetch.length,
             )
           : null,
       avgExecutionLatencyMs:
         recentWithExec.length > 0
           ? Math.round(
-              recentWithExec.reduce((s, t) => s + (t.executionLatencyMs ?? 0), 0) /
-                recentWithExec.length,
+              recentWithExec.reduce(
+                (s, t) => s + (t.executionLatencyMs ?? 0),
+                0,
+              ) / recentWithExec.length,
             )
           : withExecution.length > 0
             ? Math.round(
-                withExecution.reduce((s, t) => s + (t.executionLatencyMs ?? 0), 0) /
-                  withExecution.length,
+                withExecution.reduce(
+                  (s, t) => s + (t.executionLatencyMs ?? 0),
+                  0,
+                ) / withExecution.length,
               )
             : null,
     };
   }
 
-  async getRecentTrades(limit = 20, onlyCopied = false): Promise<RecentTradeDto[]> {
-    const wallets = await this.walletModel.find().select('wallet label').lean().exec();
+  async getRecentTrades(
+    limit = 20,
+    onlyCopied = false,
+  ): Promise<RecentTradeDto[]> {
+    const wallets = await this.walletModel
+      .find()
+      .select('wallet label')
+      .lean()
+      .exec();
     const walletLabels = new Map(wallets.map((w) => [w.wallet, w.label]));
 
     const query = onlyCopied ? { status: TradeStatus.COPIED } : {};
@@ -255,7 +290,11 @@ export class DashboardService {
   }
 
   async getWeeklyReports(weeks = 12): Promise<WeeklyReportDto[]> {
-    const wallets = await this.walletModel.find().select('wallet label').lean().exec();
+    const wallets = await this.walletModel
+      .find()
+      .select('wallet label')
+      .lean()
+      .exec();
     const walletLabels = new Map(wallets.map((w) => [w.wallet, w.label]));
 
     const reports: WeeklyReportDto[] = [];
@@ -272,13 +311,22 @@ export class DashboardService {
         .lean()
         .exec();
 
-      const copied = trades.filter((t) => t.status === TradeStatus.COPIED).length;
-      const skipped = trades.filter((t) => t.status === TradeStatus.SKIPPED).length;
-      const failed = trades.filter((t) => t.status === TradeStatus.FAILED).length;
+      const copied = trades.filter(
+        (t) => t.status === TradeStatus.COPIED,
+      ).length;
+      const skipped = trades.filter(
+        (t) => t.status === TradeStatus.SKIPPED,
+      ).length;
+      const failed = trades.filter(
+        (t) => t.status === TradeStatus.FAILED,
+      ).length;
       const total = trades.length;
       const copyRatePercent = total > 0 ? (copied / total) * 100 : 0;
 
-      const byWalletMap = new Map<string, { copied: number; skipped: number; failed: number }>();
+      const byWalletMap = new Map<
+        string,
+        { copied: number; skipped: number; failed: number }
+      >();
       for (const t of trades) {
         if (!byWalletMap.has(t.wallet)) {
           byWalletMap.set(t.wallet, { copied: 0, skipped: 0, failed: 0 });
@@ -289,11 +337,13 @@ export class DashboardService {
         else if (t.status === TradeStatus.FAILED) row.failed++;
       }
 
-      const byWallet = Array.from(byWalletMap.entries()).map(([wallet, counts]) => ({
-        wallet,
-        label: walletLabels.get(wallet) ?? undefined,
-        ...counts,
-      }));
+      const byWallet = Array.from(byWalletMap.entries()).map(
+        ([wallet, counts]) => ({
+          wallet,
+          label: walletLabels.get(wallet) ?? undefined,
+          ...counts,
+        }),
+      );
 
       reports.push({
         weekStart: format(weekStart, 'yyyy-MM-dd'),
@@ -311,19 +361,27 @@ export class DashboardService {
   }
 
   async getComparativeAnalysis(): Promise<ComparativeAnalysisDto> {
-    const wallets = await this.walletModel.find().select('wallet label').lean().exec();
+    const wallets = await this.walletModel
+      .find()
+      .select('wallet label')
+      .lean()
+      .exec();
     const walletLabels = new Map(wallets.map((w) => [w.wallet, w.label]));
 
     const trades = await this.tradeModel.find().lean().exec();
     const bot = {
       totalCopied: trades.filter((t) => t.status === TradeStatus.COPIED).length,
-      totalSkipped: trades.filter((t) => t.status === TradeStatus.SKIPPED).length,
+      totalSkipped: trades.filter((t) => t.status === TradeStatus.SKIPPED)
+        .length,
       totalFailed: trades.filter((t) => t.status === TradeStatus.FAILED).length,
     };
     const total = bot.totalCopied + bot.totalSkipped + bot.totalFailed;
     const copyRatePercent = total > 0 ? (bot.totalCopied / total) * 100 : 0;
 
-    const byWallet = new Map<string, { copied: number; skipped: number; failed: number }>();
+    const byWallet = new Map<
+      string,
+      { copied: number; skipped: number; failed: number }
+    >();
     for (const t of trades) {
       if (!byWallet.has(t.wallet)) {
         byWallet.set(t.wallet, { copied: 0, skipped: 0, failed: 0 });
@@ -334,19 +392,27 @@ export class DashboardService {
       else if (t.status === TradeStatus.FAILED) row.failed++;
     }
 
-    const leaders: LeaderComparisonDto[] = Array.from(byWallet.entries()).map(([wallet, counts]) => {
-      const totalSignals = counts.copied + counts.skipped + counts.failed;
-      return {
-        wallet,
-        label: walletLabels.get(wallet) ?? undefined,
-        copied: counts.copied,
-        skipped: counts.skipped,
-        failed: counts.failed,
-        totalSignals,
-        copyRatePercent: totalSignals > 0 ? Math.round((counts.copied / totalSignals) * 10000) / 100 : 0,
-        failRatePercent: totalSignals > 0 ? Math.round((counts.failed / totalSignals) * 10000) / 100 : 0,
-      };
-    });
+    const leaders: LeaderComparisonDto[] = Array.from(byWallet.entries()).map(
+      ([wallet, counts]) => {
+        const totalSignals = counts.copied + counts.skipped + counts.failed;
+        return {
+          wallet,
+          label: walletLabels.get(wallet) ?? undefined,
+          copied: counts.copied,
+          skipped: counts.skipped,
+          failed: counts.failed,
+          totalSignals,
+          copyRatePercent:
+            totalSignals > 0
+              ? Math.round((counts.copied / totalSignals) * 10000) / 100
+              : 0,
+          failRatePercent:
+            totalSignals > 0
+              ? Math.round((counts.failed / totalSignals) * 10000) / 100
+              : 0,
+        };
+      },
+    );
 
     return {
       bot: { ...bot, copyRatePercent: Math.round(copyRatePercent * 100) / 100 },
@@ -355,12 +421,18 @@ export class DashboardService {
   }
 
   /** Used by AlertsService to evaluate thresholds (no circular dep). */
-  async getStatsForAlerts(): Promise<{ total: number; copied: number; failed: number; lastTradeAt: Date | null }> {
+  async getStatsForAlerts(): Promise<{
+    total: number;
+    copied: number;
+    failed: number;
+    lastTradeAt: Date | null;
+  }> {
     const [counts, last] = await Promise.all([
       this.tradeModel
-        .aggregate<{ _id: string; cnt: number }>([
-          { $group: { _id: '$status', cnt: { $sum: 1 } } },
-        ])
+        .aggregate<{
+          _id: string;
+          cnt: number;
+        }>([{ $group: { _id: '$status', cnt: { $sum: 1 } } }])
         .exec(),
       this.tradeModel
         .findOne()

@@ -2,7 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { PerformanceAlert, AlertType, AlertSeverity } from './entities/performance-alert.schema';
+import {
+  PerformanceAlert,
+  AlertType,
+  AlertSeverity,
+} from './entities/performance-alert.schema';
 import { DashboardService } from '../dashboard/dashboard.service';
 
 const FAIL_RATE_THRESHOLD_PERCENT = 15;
@@ -26,9 +30,14 @@ export class AlertsService {
       const { total, copied, failed, lastTradeAt } = stats;
 
       if (total === 0) {
-        await this.createAlertIfNotExists(AlertType.NO_RECENT_TRADES, AlertSeverity.INFO, {
-          message: 'No trades recorded yet. Add followed wallets to start copy trading.',
-        });
+        await this.createAlertIfNotExists(
+          AlertType.NO_RECENT_TRADES,
+          AlertSeverity.INFO,
+          {
+            message:
+              'No trades recorded yet. Add followed wallets to start copy trading.',
+          },
+        );
         return;
       }
 
@@ -36,34 +45,50 @@ export class AlertsService {
       const copyRatePercent = (copied / total) * 100;
 
       if (failRatePercent >= FAIL_RATE_THRESHOLD_PERCENT) {
-        await this.createAlertIfNotExists(AlertType.HIGH_FAIL_RATE, AlertSeverity.CRITICAL, {
-          message: `Fail rate is ${failRatePercent.toFixed(1)}% (threshold: ${FAIL_RATE_THRESHOLD_PERCENT}%). Check execution and API.`,
-          failRatePercent,
-          failed,
-          total,
-        });
+        await this.createAlertIfNotExists(
+          AlertType.HIGH_FAIL_RATE,
+          AlertSeverity.CRITICAL,
+          {
+            message: `Fail rate is ${failRatePercent.toFixed(1)}% (threshold: ${FAIL_RATE_THRESHOLD_PERCENT}%). Check execution and API.`,
+            failRatePercent,
+            failed,
+            total,
+          },
+        );
       }
 
       if (copyRatePercent <= COPY_RATE_LOW_THRESHOLD_PERCENT && total >= 10) {
-        await this.createAlertIfNotExists(AlertType.LOW_COPY_RATE, AlertSeverity.WARNING, {
-          message: `Copy rate is ${copyRatePercent.toFixed(1)}% (below ${COPY_RATE_LOW_THRESHOLD_PERCENT}%). Many trades are being skipped.`,
-          copyRatePercent,
-          copied,
-          total,
-        });
+        await this.createAlertIfNotExists(
+          AlertType.LOW_COPY_RATE,
+          AlertSeverity.WARNING,
+          {
+            message: `Copy rate is ${copyRatePercent.toFixed(1)}% (below ${COPY_RATE_LOW_THRESHOLD_PERCENT}%). Many trades are being skipped.`,
+            copyRatePercent,
+            copied,
+            total,
+          },
+        );
       }
 
       if (lastTradeAt) {
-        const hoursSinceLastTrade = (Date.now() - lastTradeAt.getTime()) / (1000 * 60 * 60);
+        const hoursSinceLastTrade =
+          (Date.now() - lastTradeAt.getTime()) / (1000 * 60 * 60);
         if (hoursSinceLastTrade >= NO_TRADES_HOURS) {
-          await this.createAlertIfNotExists(AlertType.NO_RECENT_TRADES, AlertSeverity.WARNING, {
-            message: `No new trades in the last ${Math.floor(hoursSinceLastTrade)} hours. Leaders may be inactive.`,
-            lastTradeAt: lastTradeAt.toISOString(),
-          });
+          await this.createAlertIfNotExists(
+            AlertType.NO_RECENT_TRADES,
+            AlertSeverity.WARNING,
+            {
+              message: `No new trades in the last ${Math.floor(hoursSinceLastTrade)} hours. Leaders may be inactive.`,
+              lastTradeAt: lastTradeAt.toISOString(),
+            },
+          );
         }
       }
     } catch (err) {
-      this.logger.warn('Failed to evaluate performance alerts', err instanceof Error ? err.message : err);
+      this.logger.warn(
+        'Failed to evaluate performance alerts',
+        err instanceof Error ? err.message : err,
+      );
     }
   }
 
@@ -78,7 +103,8 @@ export class AlertsService {
       .lean()
       .exec();
     if (recent && recent.createdAt) {
-      const ageHours = (Date.now() - new Date(recent.createdAt).getTime()) / (1000 * 60 * 60);
+      const ageHours =
+        (Date.now() - new Date(recent.createdAt).getTime()) / (1000 * 60 * 60);
       if (ageHours < 2) return; // avoid spam: same alert type within 2 hours
     }
 
@@ -99,17 +125,22 @@ export class AlertsService {
       .sort({ createdAt: -1 })
       .limit(100)
       .lean()
-      .exec() as Promise<PerformanceAlert[]>;
+      .exec();
   }
 
   async markAsRead(id: string): Promise<PerformanceAlert> {
-    const alert = await this.alertModel.findByIdAndUpdate(id, { read: true }, { new: true }).lean().exec();
+    const alert = await this.alertModel
+      .findByIdAndUpdate(id, { read: true }, { new: true })
+      .lean()
+      .exec();
     if (!alert) throw new Error('Alert not found');
-    return alert as PerformanceAlert;
+    return alert;
   }
 
   async markAllAsRead(): Promise<{ count: number }> {
-    const result = await this.alertModel.updateMany({ read: false }, { read: true }).exec();
+    const result = await this.alertModel
+      .updateMany({ read: false }, { read: true })
+      .exec();
     return { count: result.modifiedCount };
   }
 }

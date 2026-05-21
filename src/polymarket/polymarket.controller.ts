@@ -1,5 +1,11 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiParam,
+} from '@nestjs/swagger';
 import { PolymarketClient } from '../clients/polymarket.client';
 import { TradeActivityResponseDto } from './dto/trade-activity.dto';
 import { ProxyWalletResponseDto } from './dto/proxy-wallet.dto';
@@ -20,14 +26,25 @@ export interface TradeActivityDto {
 export class PolymarketController {
   constructor(
     private readonly polyClient: PolymarketClient,
-    private readonly service: PolymarketService
-  ) { }
+    private readonly service: PolymarketService,
+  ) {}
 
   @Get('activity')
   @ApiOperation({ summary: 'Get trade activity for a wallet address' })
-  @ApiQuery({ name: 'address', required: true, type: String, description: 'Wallet address (maker) to fetch trades for' })
-  @ApiResponse({ status: 200, description: 'List of trades for the wallet', type: TradeActivityResponseDto })
-  async getActivity(@Query('address') address: string): Promise<{ trades: TradeActivityDto[] }> {
+  @ApiQuery({
+    name: 'address',
+    required: true,
+    type: String,
+    description: 'Wallet address (maker) to fetch trades for',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of trades for the wallet',
+    type: TradeActivityResponseDto,
+  })
+  async getActivity(
+    @Query('address') address: string,
+  ): Promise<{ trades: TradeActivityDto[] }> {
     if (!address?.trim()) {
       return { trades: [] };
     }
@@ -40,7 +57,7 @@ export class PolymarketController {
       id: t.id,
       marketId: t.market ?? '',
       tokenID: t.asset_id ?? '',
-      side: (t.side === 'SELL' ? 'SELL' : 'BUY') as 'BUY' | 'SELL',
+      side: t.side === 'SELL' ? 'SELL' : 'BUY',
       size: Number(t.size ?? 0),
       price: Number(t.price ?? 0),
       timestamp: t.match_time ?? t.last_update,
@@ -49,10 +66,22 @@ export class PolymarketController {
   }
 
   @Get('proxy-wallet/:username')
-  @ApiOperation({ summary: 'Get proxy wallet address for a Polymarket username' })
-  @ApiParam({ name: 'username', description: 'Polymarket username (without @)', example: 'trader1' })
-  @ApiResponse({ status: 200, description: 'Username and resolved proxy wallet address (or null)', type: ProxyWalletResponseDto })
-  async getProxyWallet(@Param('username') username: string): Promise<ProxyWalletResponseDto> {
+  @ApiOperation({
+    summary: 'Get proxy wallet address for a Polymarket username',
+  })
+  @ApiParam({
+    name: 'username',
+    description: 'Polymarket username (without @)',
+    example: 'trader1',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Username and resolved proxy wallet address (or null)',
+    type: ProxyWalletResponseDto,
+  })
+  async getProxyWallet(
+    @Param('username') username: string,
+  ): Promise<ProxyWalletResponseDto> {
     return {
       username,
       proxyWallet: await this.service.getProxyWallet(username),
